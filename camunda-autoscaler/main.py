@@ -1,12 +1,17 @@
 import os
 import threading
 import atexit
+import requests
 from flask import Flask, request, jsonify
 from elasticapm.contrib.flask import ElasticAPM
 
 CHECK_PERIOD = 10
+CHECK_URL = "http://127.0.0.1:51343/engine-rest/history/process-instance/count"
 
 checker = threading.Thread()
+new_count = 0
+old_count = 0
+first_time = True
 
 
 def create_app():
@@ -17,8 +22,21 @@ def create_app():
         checker.cancel()
 
     def check():
-        global checker
-        print("[TODO] Check")
+        global checker, new_count, old_count, first_time
+        try:
+            r = requests.get(CHECK_URL)
+            r.raise_for_status()
+            new_count = r.json()['count']
+            diff = new_count - old_count
+            if first_time:
+                diff = 0
+                first_time = False
+            print(new_count, old_count, diff, first_time)
+            old_count = new_count
+        except (requests.exceptions.RequestException,
+                ConnectionError,
+                KeyError) as e:
+            print(e)
         checker = threading.Timer(CHECK_PERIOD, check, ())
         checker.start()
 
