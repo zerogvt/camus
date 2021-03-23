@@ -10,7 +10,7 @@ from flask import Flask, request, jsonify
 from elasticapm.contrib.flask import ElasticAPM
 
 VERSION = '0.0.1'
-CHECK_PERIOD = 3
+CHECK_PERIOD = 10
 CAMUNDA_SERVICE_HOST = os.getenv('CAMUNDA_SERVICE_SERVICE_HOST')
 CAMUNDA_SERVICE_PORT = os.getenv('CAMUNDA_SERVICE_SERVICE_PORT')
 CHECK_URL = (f"http://{CAMUNDA_SERVICE_HOST}:{CAMUNDA_SERVICE_PORT}"
