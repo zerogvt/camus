@@ -41,15 +41,16 @@ def autoscaler():
                 count += 1
         return count
 
-    def scale_deployment():
+    def scale_deployment(factor):
         try:
             dep = k2.read_namespaced_deployment("camunda-deployment",
                                                 "default",
                                                 pretty="true")
-            # pprint(dep)
+            new_rep = dep['spec']['replicas'] + factor
+            print(f"Scaling from {dep['spec']['replicas']} to {new_rep}")
             k2.patch_namespaced_deployment("camunda-deployment",
                                            "default",
-                                           {"spec": {"replicas": 2}})
+                                           {"spec": {"replicas": new_rep}})
         except ApiException as e:
             print(e)
 
@@ -70,10 +71,9 @@ def autoscaler():
                 print(new_proc, old_proc, diff_proc, n_replicas, proc_per_inst)
                 scale_deployment()
                 if proc_per_inst >= 20 and n_replicas < 4:
-                    print("UP")
+                    scale_deployment(1)
                 elif proc_per_inst <= 10 and n_replicas > 1:
-                    scale_deployment()
-                    print("DOWN")
+                    scale_deployment(-1)
             old_proc = new_proc
         except (requests.exceptions.RequestException,
                 ConnectionError,
